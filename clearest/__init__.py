@@ -1,8 +1,10 @@
-from clearest.core import GET
-from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError
+from clearest.core import GET, unregister_all
+from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError
 
 __all__ = [
     "MissingArgumentError",
     "AlreadyRegisteredError",
-    "GET"
+    "NotUniqueError",
+    "GET",
+    "unregister_all"
 ]

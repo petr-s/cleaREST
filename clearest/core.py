@@ -4,19 +4,20 @@ import functools
 import inspect
 import re
 import six
-from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError
+from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 
 class Key(object):
-    def __init__(self, name):
+    def __init__(self, name, pre):
         self.name = name
+        self.pre = pre
 
     def __eq__(self, other):
-        return self.name == other.name
+        return self.pre == other.pre
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.pre)
 
 def parse_path(path):
     if path is None:
@@ -25,20 +26,35 @@ def parse_path(path):
     for index, part in enumerate(parts):
         found = KEY_PATTERN.match(part)
         if found:
-            parts[index] = Key(found.group(1))
+            parts[index] = Key(found.group(1), tuple(parts[:index]))
     return tuple(parts)
 
 
 def get_function_args(fn):
     spec = inspect.getargspec(fn)
-    return dict(zip(reversed(spec.args), reversed(spec.defaults) if spec.defaults else []))
+    n_args = len(spec.args)
+    if not spec.defaults:
+        defaults = [None] * n_args
+    else:
+        defaults = spec.defaults + [None] * (n_args - len(spec.defaults))
+    return dict(zip(spec.args, defaults))
 
 
 def check_function(path, fn_name, args):
+    names = set()
     for part in path:
-        if isinstance(part, Key) and part.name not in args:
-            raise MissingArgumentError(fn_name, part.name)
+        if isinstance(part, Key):
+            if part.name not in args:
+                raise MissingArgumentError(fn_name, part.name)
+            elif part.name in names:
+                raise NotUniqueError(part.name)
+            names.add(part.name)
 
+def all_registered():
+    return BaseDecorator.registered
+
+def unregister_all():
+    BaseDecorator.registered.clear()
 
 @six.add_metaclass(ABCMeta)
 class BaseDecorator(object):
