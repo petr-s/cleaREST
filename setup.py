@@ -10,6 +10,7 @@ setup(
     keywords="rest api framework json xml",
     url="https://github.com/petr-s/cleaREST",
     packages=["clearest", "tests"],
+    test_suite="tests",
     long_description=open("README.rst").read(),
     classifiers=[
         "Development Status :: 1 - Planning",
