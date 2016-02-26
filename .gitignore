@@ -1,0 +1,7 @@
+*.iml
+.idea
+*.pyc
+/build
+
+/cleaREST.egg-info
+/dist
