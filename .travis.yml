@@ -1,4 +1,5 @@
 language: python
+
 python:
   - "2.7"
   - "3.2"
@@ -7,6 +8,14 @@ python:
   - "3.5"
   - "3.5-dev"
   - "nightly"
-install: "pip install -r requirements.txt"
-install: "pip install -r test-requirements.txt"
-script: nosetests
+
+install:
+  - pip install -r requirements.txt
+  - pip install -r test-requirements.txt"
+  - pip install coveralls
+
+script:
+  coverage run --source=clearest setup.py test
+
+after_success:
+  coveralls
