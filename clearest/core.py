@@ -3,8 +3,12 @@ from collections import defaultdict
 import functools
 import inspect
 import re
+
 import six
-from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError
+
+from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, HttpBadRequest
+from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN
+from clearest.wsgi import REQUEST_METHOD
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 
@@ -56,6 +60,18 @@ def all_registered():
 def unregister_all():
     BaseDecorator.registered.clear()
 
+def application(environ, start_response):
+    try:
+        if environ[REQUEST_METHOD] not in all_registered():
+            raise HttpBadRequest()
+        registered = BaseDecorator.registered[environ[REQUEST_METHOD]]
+    except HttpError as error:
+        start_response("{code} {msg}".format(code=error.code, msg=error.msg), [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
+        return []
+    else:
+        pass
+
+
 @six.add_metaclass(ABCMeta)
 class BaseDecorator(object):
     registered = defaultdict(lambda: dict())
@@ -84,9 +100,9 @@ class BaseDecorator(object):
 
 class GET(BaseDecorator):
     def type(self):
-        return "GET"
+        return HTTP_GET
 
 class POST(BaseDecorator):
     def type(self):
-        return "POST"
+        return HTTP_POST
 
