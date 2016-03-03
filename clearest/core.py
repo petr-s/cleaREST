@@ -3,14 +3,17 @@ from collections import defaultdict
 import functools
 import inspect
 import re
+import urlparse
 
 import six
 
-from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, HttpBadRequest
-from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN
-from clearest.wsgi import REQUEST_METHOD
+from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, HttpBadRequest, \
+    HttpNotFound
+from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK
+from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING
 
 KEY_PATTERN = re.compile("\{(.*)\}")
+STATUS_FMT = "{code} {msg}"
 
 class Key(object):
     def __init__(self, name, pre):
@@ -38,9 +41,9 @@ def get_function_args(fn):
     spec = inspect.getargspec(fn)
     n_args = len(spec.args)
     if not spec.defaults:
-        defaults = [None] * n_args
+        defaults = tuple([None] * n_args)
     else:
-        defaults = spec.defaults + [None] * (n_args - len(spec.defaults))
+        defaults = spec.defaults + tuple([None] * (n_args - len(spec.defaults)))
     return dict(zip(spec.args, defaults))
 
 
@@ -60,14 +63,27 @@ def all_registered():
 def unregister_all():
     BaseDecorator.registered.clear()
 
+def is_matching(signature, args, path, query):
+    if len(signature) != len(path):
+        return False
+    return True
+
 def application(environ, start_response):
     try:
-        if environ[REQUEST_METHOD] not in all_registered():
-            raise HttpBadRequest()
-        registered = BaseDecorator.registered[environ[REQUEST_METHOD]]
+        if environ[REQUEST_METHOD] in all_registered():
+            path = tuple(environ[PATH_INFO].split("/"))
+            query = urlparse.parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else tuple()
+            for signature, (fn, args) in BaseDecorator.registered[environ[REQUEST_METHOD]].iteritems():
+                if is_matching(signature, args, path, query):
+                    result = fn()
+                    start_response(STATUS_FMT.format(**HTTP_OK._asdict()),
+                                   [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
+                    return [result]
+        raise HttpNotFound()
     except HttpError as error:
-        start_response("{code} {msg}".format(code=error.code, msg=error.msg), [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
-        return []
+        status = STATUS_FMT.format(code=error.code, msg=error.msg)
+        start_response(status, [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
+        return [status]
     else:
         pass
 

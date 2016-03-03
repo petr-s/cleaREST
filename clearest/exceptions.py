@@ -1,4 +1,4 @@
-from clearest.http import HTTP_BAD_REQUEST
+from clearest.http import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 
 
 class MissingArgumentError(Exception):
@@ -22,3 +22,7 @@ class HttpError(Exception):
 class HttpBadRequest(HttpError):
     def __init__(self):
         super(HttpBadRequest, self).__init__(*HTTP_BAD_REQUEST)
+
+class HttpNotFound(HttpError):
+    def __init__(self):
+        super(HttpNotFound, self).__init__(*HTTP_NOT_FOUND)

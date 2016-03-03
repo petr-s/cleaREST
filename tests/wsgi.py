@@ -11,7 +11,7 @@ class WSGITestCase(TestCase):
         self.status = None
 
     def _start_response(self, status, headers):
-        code, msg = status.split(" ")
+        code, msg = status.split(" ", 1)
         self.status = HttpStatus(code=int(code), msg=msg)
         self.headers = headers
 
@@ -22,8 +22,7 @@ class WSGITestCase(TestCase):
                SERVER_NAME: "wsgi_unit_test",
                SERVER_PORT: 42,
                SCRIPT_NAME: ""}
-        parts = query.split("?")
-        assert len(parts) <= 2
+        parts = query.split("?", 1)
         if len(parts) is 2:
             env[PATH_INFO], env[QUERY_STRING] = parts
         else:
