@@ -3,7 +3,10 @@ from collections import defaultdict
 import functools
 import inspect
 import re
-import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 import six
 
@@ -73,7 +76,7 @@ def application(environ, start_response):
         if environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO].split("/"))
             query = urlparse.parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else tuple()
-            for signature, (fn, args) in BaseDecorator.registered[environ[REQUEST_METHOD]].iteritems():
+            for signature, (fn, args) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
                     result = fn()
                     start_response(STATUS_FMT.format(**HTTP_OK._asdict()),
