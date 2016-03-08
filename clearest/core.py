@@ -5,10 +5,10 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 
-try:
-    from urllib.parse import parse_qs
-except ImportError:
-    from urlparse import parse_qs
+try:  # pragma: no cover
+    from urllib.parse import parse_qs  # pragma: no cover
+except ImportError:  # pragma: no cover
+    from urlparse import parse_qs  # pragma: no cover
 
 import six
 
@@ -146,7 +146,7 @@ class BaseDecorator(object):
 
     @abstractmethod
     def type(self):
-        pass
+        pass  # pragma: no cover
 
 
 class GET(BaseDecorator):

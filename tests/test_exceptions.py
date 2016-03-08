@@ -7,6 +7,14 @@ class Test(TestCase):
     def setUp(self):
         unregister_all()
 
+    def test_decorator_none_path(self):
+        def test_fn():
+            @GET(None)
+            def asd():
+                pass
+
+        self.assertRaises(TypeError, test_fn)
+
     def test_decorator_missing_argument(self):
         def test_fn():
             @GET("/{key}")
