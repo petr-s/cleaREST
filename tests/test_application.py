@@ -33,6 +33,16 @@ class Test(WSGITestCase):
         def asd():
             return {}
 
-        self.get("asd")
-        self.assertEqual(((), {}), asd.called_with)
+        self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((), {}), asd.called_with)
+
+    def test_application_simple_var(self):
+        @GET("/asd")
+        @called_with
+        def asd(a):
+            return {}
+
+        self.get("/asd?a=hi")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual((("hi",), {}), asd.called_with)

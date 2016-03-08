@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from clearest import GET, MissingArgumentError, AlreadyRegisteredError, NotUniqueError, unregister_all
+from clearest import GET, MissingArgumentError, AlreadyRegisteredError, NotUniqueError, unregister_all, NotRootError
 
 
 class Test(TestCase):
@@ -58,3 +58,11 @@ class Test(TestCase):
                 pass
 
         self.assertRaises(NotUniqueError, test_fn)
+
+    def test_not_root(self):
+        def test_fn():
+            @GET("asd")
+            def asd(a, b):
+                pass
+
+        self.assertRaises(NotRootError, test_fn)

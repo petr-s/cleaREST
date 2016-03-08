@@ -18,6 +18,11 @@ class NotUniqueError(Exception):
         super(NotUniqueError, self).__init__("variable {var} is not unique".format(var=var_name))
 
 
+class NotRootError(Exception):
+    def __init__(self, path):
+        super(NotRootError, self).__init__("path is not it the root (change it to /{path})".format(path=path))
+
+
 class HttpError(Exception):
     def __init__(self, code, msg):
         super(HttpError, self).__init__()

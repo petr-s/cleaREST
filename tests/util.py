@@ -1,10 +1,8 @@
-import functools
+from decorator import decorator
 
 
-def called_with(fn):
-    @functools.wraps(fn)
-    def wrapped(*args, **kwargs):
-        wrapped.called_with = args, kwargs
-        return fn(*args, **kwargs)
-
-    return wrapped
+@decorator
+def called_with(fn, *args, **kwargs):
+    result = fn(*args, **kwargs)
+    fn.called_with = args, kwargs
+    return result
