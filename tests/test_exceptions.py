@@ -1,5 +1,7 @@
 from unittest import TestCase
+
 from clearest import GET, MissingArgumentError, AlreadyRegisteredError, NotUniqueError, unregister_all
+
 
 class Test(TestCase):
     def setUp(self):
@@ -10,6 +12,7 @@ class Test(TestCase):
             @GET("/{key}")
             def asd():
                 pass
+
         self.assertRaises(MissingArgumentError, test_fn)
 
     def test_decorator_already_registered_simple(self):
@@ -21,6 +24,7 @@ class Test(TestCase):
             @GET("/asd/asd")
             def asd2():
                 pass
+
         self.assertRaises(AlreadyRegisteredError, test_fn)
 
     def test_decorator_already_registered_keys_simple(self):
@@ -32,6 +36,7 @@ class Test(TestCase):
             @GET("/asd/{b}")
             def asd2(b):
                 pass
+
         self.assertRaises(AlreadyRegisteredError, test_fn)
 
     def test_decorator_already_registered_keys_complex(self):
@@ -43,6 +48,7 @@ class Test(TestCase):
             @GET("/asd/{a}/asd/{c}")
             def asd2(b, c):
                 pass
+
         self.assertRaises(AlreadyRegisteredError, test_fn)
 
     def test_decorator_var_not_unique(self):
@@ -50,4 +56,5 @@ class Test(TestCase):
             @GET("/asd/{a}/{a}")
             def asd(a, b):
                 pass
+
         self.assertRaises(NotUniqueError, test_fn)

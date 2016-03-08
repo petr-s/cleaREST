@@ -1,8 +1,10 @@
-from abc import ABCMeta, abstractmethod
-from collections import defaultdict
 import functools
 import inspect
 import re
+from abc import ABCMeta, abstractmethod
+from collections import defaultdict
+from copy import deepcopy
+
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -10,13 +12,14 @@ except ImportError:
 
 import six
 
-from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, HttpBadRequest, \
+from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
     HttpNotFound
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 STATUS_FMT = "{code} {msg}"
+
 
 class Key(object):
     def __init__(self, name, pre):
@@ -29,10 +32,11 @@ class Key(object):
     def __hash__(self):
         return hash(self.pre)
 
+
 def parse_path(path):
     if path is None:
         raise TypeError
-    parts = path[1:].split("/") if path.startswith("/") else path.split("/") # meh
+    parts = path[1:].split("/") if path.startswith("/") else path.split("/")  # meh
     for index, part in enumerate(parts):
         found = KEY_PATTERN.match(part)
         if found:
@@ -60,16 +64,20 @@ def check_function(path, fn_name, args):
                 raise NotUniqueError(part.name)
             names.add(part.name)
 
+
 def all_registered():
     return BaseDecorator.registered
 
+
 def unregister_all():
     BaseDecorator.registered.clear()
+
 
 def is_matching(signature, args, path, query):
     if len(signature) != len(path):
         return False
     return True
+
 
 def application(environ, start_response):
     try:
@@ -99,6 +107,12 @@ class BaseDecorator(object):
         self.path = parse_path(path)
 
     def __call__(self, fn):
+        @functools.wraps(fn)
+        def wrapped(*args, **kwargs):
+            result = fn(*args, **kwargs)
+            wrapped.__dict__ = deepcopy(fn.__dict__)
+            return result
+
         registered = BaseDecorator.registered[self.type()]
         if self.path in registered:
             old = registered[self.path][0].__name__
@@ -106,22 +120,19 @@ class BaseDecorator(object):
             raise AlreadyRegisteredError(path, old)
         fn_args = get_function_args(fn)
         check_function(self.path, fn.__name__, fn_args)
-        registered[self.path] = fn, fn_args
-
-        @functools.wraps(fn)
-        def wrapped(*args, **kwargs):
-            return fn(*args, **kwargs)
+        registered[self.path] = wrapped, fn_args
         return wrapped
 
     @abstractmethod
     def type(self):
         pass
 
+
 class GET(BaseDecorator):
     def type(self):
         return HTTP_GET
 
+
 class POST(BaseDecorator):
     def type(self):
         return HTTP_POST
-

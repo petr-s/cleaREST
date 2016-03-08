@@ -1,7 +1,8 @@
 from unittest import TestCase
+
+from clearest.core import application
 from clearest.http import *
 from clearest.wsgi import *
-from clearest.core import application
 
 
 class WSGITestCase(TestCase):

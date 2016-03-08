@@ -1,5 +1,7 @@
-from clearest import POST, HTTP_BAD_REQUEST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK
+from clearest import POST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK
+from tests.util import called_with
 from tests.wsgi import WSGITestCase
+
 
 class Test(WSGITestCase):
     def setUp(self):
@@ -13,6 +15,7 @@ class Test(WSGITestCase):
         @POST("/asd")
         def asd():
             return {}
+
         self.get("/asd")
         self.assertEqual(HTTP_NOT_FOUND, self.status)
 
@@ -20,12 +23,16 @@ class Test(WSGITestCase):
         @GET("/asd")
         def asd():
             return {}
+
         self.get("/asd/42")
         self.assertEqual(HTTP_NOT_FOUND, self.status)
 
     def test_application_simple_query(self):
         @GET("/asd")
+        @called_with
         def asd():
             return {}
+
         self.get("asd")
+        self.assertEqual(((), {}), asd.called_with)
         self.assertEqual(HTTP_OK, self.status)
