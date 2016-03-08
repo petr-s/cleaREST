@@ -46,3 +46,33 @@ class Test(WSGITestCase):
         self.get("/asd?a=hi")
         self.assertEqual(HTTP_OK, self.status)
         self.assertEqual((("hi",), {}), asd.called_with)
+
+    def test_application_simple_var_parse(self):
+        @GET("/asd")
+        @called_with
+        def asd(a=int):
+            return {}
+
+        self.get("/asd?a=42")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((42,), {}), asd.called_with)
+
+    def test_application_simple_var_default(self):
+        @GET("/asd")
+        @called_with
+        def asd(a=(int, 0)):
+            return {}
+
+        self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((0,), {}), asd.called_with)
+
+    def test_application_simple_var_parse_default(self):
+        @GET("/asd")
+        @called_with
+        def asd(a=(int, 0)):
+            return {}
+
+        self.get("/asd?a=42")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((42,), {}), asd.called_with)

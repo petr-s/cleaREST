@@ -19,6 +19,8 @@ from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 STATUS_FMT = "{code} {msg}"
+CALLABLE = 0
+DEFAULT = 1
 
 
 class Key(object):
@@ -82,10 +84,17 @@ def is_matching(signature, args, path, query):
 
 
 def parse_args(args, path, query):
+    def one_or_many(dict_, key):
+        return dict_[key][0] if len(dict_[key]) == 1 else dict_[key]
+
     kwargs = {}
     for arg, parse_fn in six.iteritems(args):
         if parse_fn is None:
-            kwargs[arg] = query[arg][0] if len(query[arg]) == 1 else query[arg]
+            kwargs[arg] = one_or_many(query, arg)
+        elif isinstance(parse_fn, tuple):
+            kwargs[arg] = parse_fn[DEFAULT] if arg not in query else parse_fn[CALLABLE](one_or_many(query, arg))
+        else:
+            kwargs[arg] = parse_fn(one_or_many(query, arg))
     return kwargs
 
 
