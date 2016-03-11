@@ -11,7 +11,7 @@ cleaREST
 
 Examples:
 ---------
-Hello world: ::
+GET Hello world: ::
 
   from wsgiref.simple_server import make_server
   from clearest import application, GET
@@ -27,5 +27,25 @@ Hello world: ::
 Output:
 
   curl localhost:8000
+
+  hello world!
+
+POST var: ::
+
+  from wsgiref.simple_server import make_server
+  from clearest import application, POST
+
+
+  @POST("/")
+  def hello(what):
+      return "hello {what}!".format(what=what)
+
+
+  httpd = make_server("", 8000, application)
+  httpd.serve_forever()
+
+Output:
+
+  curl --data "what=world" localhost:8000
 
   hello world!

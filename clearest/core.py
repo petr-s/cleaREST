@@ -13,9 +13,9 @@ except ImportError:  # pragma: no cover
 import six
 
 from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
-    HttpNotFound, NotRootError
-from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK
-from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING
+    HttpNotFound, NotRootError, HttpUnsupportedMediaType
+from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED
+from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 STATUS_FMT = "{code} {msg}"
@@ -99,10 +99,19 @@ def parse_args(args, path, query):
 
 
 def application(environ, start_response):
+    def parse_www_form(input_file, n):
+        return parse_qs(input_file.read(n))
+
+    content_types = {MIME_WWW_FORM_URLENCODED: parse_www_form}
     try:
         if environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
-            query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else tuple()
+            query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
+            if WSGI_CONTENT_TYPE in environ:
+                if environ[WSGI_CONTENT_TYPE] not in content_types:
+                    raise HttpUnsupportedMediaType()
+                query.update(content_types[environ[WSGI_CONTENT_TYPE]](environ[WSGI_INPUT],
+                                                                       int(environ[WSGI_CONTENT_LENGTH])))
             for signature, (fn, args) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
                     result = fn(**parse_args(args, path, query))
