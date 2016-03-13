@@ -17,5 +17,7 @@ HTTP_PROTOCOLS = (HTTP_1_0, HTTP_1_1)
 
 MIME_TEXT_PLAIN = "text/plain"
 MIME_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded"
+MIME_FORM_DATA = "multipart/form-data"
 
 CONTENT_TYPE = "Content-type"
+CONTENT_DISPOSITION = "Content-Disposition"

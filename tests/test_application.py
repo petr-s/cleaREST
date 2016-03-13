@@ -1,7 +1,7 @@
 from six import StringIO
 
 from clearest import POST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK, HTTP_UNSUPPORTED_MEDIA_TYPE, \
-    MIME_WWW_FORM_URLENCODED
+    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA
 from tests.util import called_with
 from tests.wsgi import WSGITestCase
 
@@ -107,3 +107,22 @@ class Test(WSGITestCase):
         self.post("/asd", input_=StringIO("a=hello"), content_type=MIME_WWW_FORM_URLENCODED, content_len=7)
         self.assertEqual(HTTP_OK, self.status)
         self.assertEqual((("hello",), {}), asd.called_with)
+
+    def test_application_simple_post_multipart_var(self):
+        @POST("/asd")
+        @called_with
+        def asd(a):
+            return {}
+
+        boundary = "-----------------------------12345"
+        body = """{boundary}
+Content-Disposition: form-data; name="a"
+
+asd
+{boundary}""".format(boundary=boundary)
+        self.post("/asd",
+                  input_=StringIO(body),
+                  content_type="{name}; boundary={boundary}".format(name=MIME_FORM_DATA, boundary=boundary),
+                  content_len=len(body))
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual((("asd",), {}), asd.called_with)

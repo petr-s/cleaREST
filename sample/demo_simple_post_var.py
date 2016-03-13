@@ -8,5 +8,5 @@ def hello(what):
     return "hello {what}!".format(what=what)
 
 
-httpd = make_server("", 8001, application)
+httpd = make_server("", 8000, application)
 httpd.serve_forever()
