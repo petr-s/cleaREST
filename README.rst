@@ -7,11 +7,11 @@
 ========
 cleaREST
 ========
-**Light-weight Python framework for building REST apis**
+**Light-weight Python framework for building REST APIs**
 
 Examples:
 ---------
-GET Hello world: ::
+**GET Hello world:** ::
 
   from wsgiref.simple_server import make_server
   from clearest import application, GET
@@ -30,7 +30,7 @@ Output:
 
   hello world!
 
-POST var: ::
+**POST var:** ::
 
   from wsgiref.simple_server import make_server
   from clearest import application, POST

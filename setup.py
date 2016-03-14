@@ -2,10 +2,10 @@ from setuptools import setup
 
 setup(
     name="cleaREST",
-    version="0.0.1",
+    version="0.1.0",
     author="Petr Skramovsky",
     author_email="petr.skramovsky@gmail.com",
-    description="Light-weight Python framework for building REST apis.",
+    description="Light-weight Python framework for building REST APIs.",
     license="MIT",
     keywords="rest api framework json xml",
     url="https://github.com/petr-s/cleaREST",
@@ -13,7 +13,7 @@ setup(
     test_suite="tests",
     long_description=open("README.rst").read(),
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 2 - Pre-Alpha",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
