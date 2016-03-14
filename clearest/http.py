@@ -5,6 +5,7 @@ HTTP_POST = "POST"
 
 HttpStatus = namedtuple("HttpStatus", ["code", "msg"])
 HTTP_OK = HttpStatus(200, "OK")
+HTTP_CREATED = HttpStatus(201, "Created")
 HTTP_BAD_REQUEST = HttpStatus(403, "Bad Request")
 HTTP_NOT_FOUND = HttpStatus(404, "Not Found")
 HTTP_UNSUPPORTED_MEDIA_TYPE = HttpStatus(415, "Unsupported Media Type")

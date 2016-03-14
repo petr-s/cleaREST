@@ -1,7 +1,7 @@
 from six import StringIO
 
 from clearest import POST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK, HTTP_UNSUPPORTED_MEDIA_TYPE, \
-    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA
+    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA, HTTP_CREATED
 from tests.util import called_with
 from tests.wsgi import WSGITestCase
 
@@ -37,6 +37,26 @@ class Test(WSGITestCase):
 
         self.post("/asd/42", content_type="application/unsupported")
         self.assertEqual(HTTP_UNSUPPORTED_MEDIA_TYPE, self.status)
+
+    def test_application_status_default(self):
+        @GET("/asd")
+        @called_with
+        def asd():
+            return {}
+
+        self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((), {}), asd.called_with)
+
+    def test_application_status(self):
+        @POST("/asd", HTTP_CREATED)
+        @called_with
+        def asd():
+            return {}
+
+        self.post("/asd")
+        self.assertEqual(HTTP_CREATED, self.status)
+        self.assertEqual(((), {}), asd.called_with)
 
     def test_application_simple_query(self):
         @GET("/asd")

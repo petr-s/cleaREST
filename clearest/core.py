@@ -19,7 +19,7 @@ from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HT
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH
 
 KEY_PATTERN = re.compile("\{(.*)\}")
-STATUS_FMT = "{code} {msg}"
+STATUS_FMT = "{0} {1}"
 CALLABLE = 0
 DEFAULT = 1
 
@@ -134,15 +134,15 @@ def application(environ, start_response):
                 if content_type not in content_types:
                     raise HttpUnsupportedMediaType()
                 query.update(content_types[content_type](environ[WSGI_INPUT], int(environ[WSGI_CONTENT_LENGTH]), rest))
-            for signature, (fn, args) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
+            for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
                     result = fn(**parse_args(args, path, query))
-                    start_response(STATUS_FMT.format(**HTTP_OK._asdict()),
+                    start_response(STATUS_FMT.format(*status),
                                    [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
                     return [result]
         raise HttpNotFound()
     except HttpError as error:
-        status = STATUS_FMT.format(code=error.code, msg=error.msg)
+        status = STATUS_FMT.format(error.code, error.msg)
         start_response(status, [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
         return [status]
 
@@ -151,8 +151,9 @@ def application(environ, start_response):
 class BaseDecorator(object):
     registered = defaultdict(lambda: dict())
 
-    def __init__(self, path):
+    def __init__(self, path, status=HTTP_OK):
         self.path = parse_path(path)
+        self.status = status
 
     def __call__(self, fn):
         @functools.wraps(fn)
@@ -170,7 +171,7 @@ class BaseDecorator(object):
             raise AlreadyRegisteredError(path, old)
         fn_args = get_function_args(fn)
         check_function(self.path, fn.__name__, fn_args)
-        registered[self.path] = wrapped, fn_args
+        registered[self.path] = wrapped, fn_args, self.status
         return wrapped
 
     @abstractmethod
