@@ -1,10 +1,13 @@
 import functools
 import inspect
+import json
 import logging
 import re
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
+from xml.dom.minidom import Document
+from xml.etree.ElementTree import tostring, Element
 
 try:  # pragma: no cover
     from urllib.parse import parse_qs  # pragma: no cover
@@ -14,15 +17,16 @@ except ImportError:  # pragma: no cover
 import six
 
 from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
-    HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest
+    HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest, HttpNotImplemented
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED, \
-    MIME_FORM_DATA, CONTENT_DISPOSITION
+    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 STATUS_FMT = "{0} {1}"
 CALLABLE = 0
 DEFAULT = 1
+_content_types = {}
 
 
 class Key(object):
@@ -77,6 +81,10 @@ def all_registered():
 
 def unregister_all():
     BaseDecorator.registered.clear()
+
+
+def register_content_type(type_, content_type, handler):
+    _content_types[type_] = content_type, handler
 
 
 def is_matching(signature, args, path, query):
@@ -143,9 +151,15 @@ def application(environ, start_response):
                         logging.exception(e)
                         raise HttpBadRequest()
                     result = fn(**parsed_args)
+                    for type_ in six.iterkeys(_content_types):
+                        if isinstance(result, type_):
+                            content_type, content_handler = _content_types[type_]
+                            break
+                    else:
+                        raise HttpNotImplemented()
                     start_response(STATUS_FMT.format(*status),
-                                   [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
-                    return [result]
+                                   [(CONTENT_TYPE, content_type)])
+                    return [content_handler(result)]
         raise HttpNotFound()
     except HttpError as error:
         status = STATUS_FMT.format(error.code, error.msg)
@@ -193,3 +207,9 @@ class GET(BaseDecorator):
 class POST(BaseDecorator):
     def type(self):
         return HTTP_POST
+
+
+register_content_type(str, MIME_TEXT_PLAIN, lambda x: x)
+register_content_type(dict, MIME_JSON, json.dumps)
+register_content_type(Document, MIME_XML, lambda x: x.toxml())
+register_content_type(Element, MIME_XML, lambda x: tostring(x))

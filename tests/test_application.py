@@ -1,7 +1,10 @@
+import json
+
 from six import StringIO
 
 from clearest import POST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK, HTTP_UNSUPPORTED_MEDIA_TYPE, \
-    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA, HTTP_CREATED, HTTP_BAD_REQUEST, HttpNotFound
+    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA, HTTP_CREATED, HTTP_BAD_REQUEST, HttpNotFound, CONTENT_TYPE, \
+    MIME_TEXT_PLAIN, MIME_JSON, HTTP_NOT_IMPLEMENTED, MIME_XML
 from tests.util import called_with
 from tests.wsgi import WSGITestCase
 
@@ -174,3 +177,72 @@ asd
                   content_len=len(body))
         self.assertEqual(HTTP_OK, self.status)
         self.assertEqual((("asd",), {}), asd.called_with)
+
+    def test_application_missing_content_type(self):
+        @GET("/asd")
+        @called_with
+        def asd():
+            return []
+
+        self.get("/asd")
+        self.assertEqual(HTTP_NOT_IMPLEMENTED, self.status)
+
+    def test_application_content_type_default_text(self):
+        @GET("/asd")
+        @called_with
+        def asd():
+            return "hi"
+
+        result = self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((), {}), asd.called_with)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_TEXT_PLAIN, self.headers[CONTENT_TYPE])
+        self.assertEqual("hi", result)
+
+    def test_application_content_type_default_json(self):
+        @GET("/asd")
+        @called_with
+        def asd():
+            return {"hello": "world"}
+
+        result = self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((), {}), asd.called_with)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_JSON, self.headers[CONTENT_TYPE])
+        self.assertEqual({"hello": "world"}, json.loads(result))
+
+    def test_application_content_type_default_xml_mimidom(self):
+        from xml.dom.minidom import Document, parseString
+
+        @GET("/asd")
+        @called_with
+        def asd():
+            doc = Document()
+            root = doc.createElement("root")
+            doc.appendChild(root)
+            return doc
+
+        result = self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((), {}), asd.called_with)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_XML, self.headers[CONTENT_TYPE])
+        self.assertEqual(parseString("<root/>").toxml(), result)
+
+    def test_application_content_type_default_xml_etree(self):
+        from xml.etree.ElementTree import Element, fromstring, tostring
+
+        @GET("/asd")
+        @called_with
+        def asd():
+            root = Element("root")
+            return root
+
+        result = self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((), {}), asd.called_with)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_XML, self.headers[CONTENT_TYPE])
+        self.assertEqual(tostring(fromstring("<root/>")), tostring(fromstring(result)))

@@ -10,13 +10,13 @@ from clearest.wsgi import *
 class WSGITestCase(TestCase):
     def __init__(self, *args, **kwargs):
         super(WSGITestCase, self).__init__(*args, **kwargs)
-        self.headers = []
+        self.headers = {}
         self.status = None
 
     def _start_response(self, status, headers):
         code, msg = status.split(" ", 1)
         self.status = HttpStatus(code=int(code), msg=msg)
-        self.headers = headers
+        self.headers = dict(headers)
 
     def request(self, app, method, query, input_, content_type=None, content_len=0):
         assert method in HTTP_METHODS
@@ -35,9 +35,10 @@ class WSGITestCase(TestCase):
             env[WSGI_CONTENT_TYPE] = content_type
         if content_len > 0:
             env[WSGI_CONTENT_LENGTH] = content_len
-        result = []
-        for data in app(env, self._start_response):
-            result.append(data)
+        result = None
+        for data in app(env, self._start_response):  # TODO: PY2 vs PY3 string/bytes
+            result = data
+            break
         return result
 
     def get(self, query, app=application):
