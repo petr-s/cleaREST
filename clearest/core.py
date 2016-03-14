@@ -1,5 +1,6 @@
 import functools
 import inspect
+import logging
 import re
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -13,7 +14,7 @@ except ImportError:  # pragma: no cover
 import six
 
 from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
-    HttpNotFound, NotRootError, HttpUnsupportedMediaType
+    HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED, \
     MIME_FORM_DATA, CONTENT_DISPOSITION
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH
@@ -136,7 +137,12 @@ def application(environ, start_response):
                 query.update(content_types[content_type](environ[WSGI_INPUT], int(environ[WSGI_CONTENT_LENGTH]), rest))
             for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
-                    result = fn(**parse_args(args, path, query))
+                    try:
+                        parsed_args = parse_args(args, path, query)
+                    except Exception as e:
+                        logging.exception(e)
+                        raise HttpBadRequest()
+                    result = fn(**parsed_args)
                     start_response(STATUS_FMT.format(*status),
                                    [(CONTENT_TYPE, MIME_TEXT_PLAIN)])
                     return [result]
