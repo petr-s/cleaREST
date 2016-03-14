@@ -1,7 +1,7 @@
 from six import StringIO
 
 from clearest import POST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK, HTTP_UNSUPPORTED_MEDIA_TYPE, \
-    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA, HTTP_CREATED, HTTP_BAD_REQUEST
+    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA, HTTP_CREATED, HTTP_BAD_REQUEST, HttpNotFound
 from tests.util import called_with
 from tests.wsgi import WSGITestCase
 
@@ -75,6 +75,16 @@ class Test(WSGITestCase):
         self.post("/asd")
         self.assertEqual(HTTP_CREATED, self.status)
         self.assertEqual(((), {}), asd.called_with)
+
+    def test_application_raise_custom(self):
+        @GET("/asd")
+        @called_with
+        def asd():
+            raise HttpNotFound()
+            return {}
+
+        self.get("/asd")
+        self.assertEqual(HTTP_NOT_FOUND, self.status)
 
     def test_application_simple_query(self):
         @GET("/asd")
