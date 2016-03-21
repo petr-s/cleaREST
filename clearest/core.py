@@ -6,6 +6,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
+from types import LambdaType
 from xml.dom.minidom import Document
 from xml.etree.ElementTree import tostring, Element
 
@@ -94,17 +95,27 @@ def is_matching(signature, args, path, query):
 
 
 def parse_args(args, path, query):
-    def one_or_many(dict_, key):
-        return dict_[key][0] if len(dict_[key]) == 1 else dict_[key]
+    def one_or_many(fn_, dict_, key):
+        result = [fn_(value) for value in dict_[key]]
+        return result[0] if len(result) == 1 else result
 
     kwargs = {}
     for arg, parse_fn in six.iteritems(args):
         if parse_fn is None:
-            kwargs[arg] = one_or_many(query, arg)
+            kwargs[arg] = one_or_many(lambda x: x, query, arg)
         elif isinstance(parse_fn, tuple):
-            kwargs[arg] = parse_fn[DEFAULT] if arg not in query else parse_fn[CALLABLE](one_or_many(query, arg))
+            kwargs[arg] = parse_fn[DEFAULT] if arg not in query else one_or_many(parse_fn[CALLABLE], query, arg)
+        elif isinstance(parse_fn, LambdaType):
+            _code = six.get_function_code(parse_fn)
+            closures = six.get_function_closure(parse_fn)
+            if closures:
+                assert len(closures) <= 1
+                fn = closures[0].cell_contents
+            else:
+                fn = eval(".".join(_code.co_names), six.get_function_globals(parse_fn))
+            kwargs[arg] = fn(**parse_args(get_function_args(parse_fn), path, query))
         else:
-            kwargs[arg] = parse_fn(one_or_many(query, arg))
+            kwargs[arg] = one_or_many(parse_fn, query, arg)
     return kwargs
 
 
@@ -126,7 +137,7 @@ def application(environ, start_response):
             elif state == 2 and not len(line):
                 state = 3
             elif state == 3:
-                kwargs[name] = line
+                kwargs[name] = [line]
                 state = 0
         return kwargs
 

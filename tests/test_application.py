@@ -9,6 +9,10 @@ from tests.util import called_with
 from tests.wsgi import WSGITestCase
 
 
+def g_login(user, password):
+    return 1
+
+
 class Test(WSGITestCase):
     def setUp(self):
         unregister_all()
@@ -118,6 +122,16 @@ class Test(WSGITestCase):
         self.get("/asd?a=42")
         self.assertEqual(HTTP_OK, self.status)
         self.assertEqual(((42,), {}), asd.called_with)
+
+    def test_application_simple_var_parse_many(self):
+        @GET("/asd")
+        @called_with
+        def asd(a=int):
+            return {}
+
+        self.get("/asd?a=42&a=84")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual((([42, 84],), {}), asd.called_with)
 
     def test_application_simple_var_default(self):
         @GET("/asd")
@@ -246,3 +260,26 @@ asd
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_XML, self.headers[CONTENT_TYPE])
         self.assertEqual(tostring(fromstring("<root/>")), tostring(fromstring(result)))
+
+    def test_application_simple_lambda_closure(self):
+        def login(user, password):
+            return 1
+
+        @GET("/asd")
+        @called_with
+        def asd(user_id=lambda user, password: login):
+            return {}
+
+        self.get("/asd?user=guest&password=secret")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((1,), {}), asd.called_with)
+
+    def test_application_simple_lambda(self):
+        @GET("/asd")
+        @called_with
+        def asd(user_id=lambda user, password: g_login):
+            return {}
+
+        self.get("/asd?user=guest&password=secret")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertEqual(((1,), {}), asd.called_with)
