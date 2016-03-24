@@ -46,3 +46,6 @@ class WSGITestCase(TestCase):
 
     def post(self, query, app=application, input_=None, content_type=None, content_len=0):
         return self.request(app, HTTP_POST, query, input_, content_type, content_len)
+
+    def assertCalledWith(self, fn, *args, **kwargs):
+        self.assertEqual((args, kwargs), fn.called_with)

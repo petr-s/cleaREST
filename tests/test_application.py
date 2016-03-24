@@ -101,7 +101,7 @@ class Test(WSGITestCase):
 
         self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((), {}), asd.called_with)
+        self.assertCalledWith(asd)
 
     def test_application_simple_var(self):
         @GET("/asd")
@@ -111,7 +111,7 @@ class Test(WSGITestCase):
 
         self.get("/asd?a=hi")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual((("hi",), {}), asd.called_with)
+        self.assertCalledWith(asd, "hi")
 
     def test_application_simple_var_parse(self):
         @GET("/asd")
@@ -121,7 +121,7 @@ class Test(WSGITestCase):
 
         self.get("/asd?a=42")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((42,), {}), asd.called_with)
+        self.assertCalledWith(asd, 42)
 
     def test_application_simple_var_parse_many(self):
         @GET("/asd")
@@ -131,7 +131,7 @@ class Test(WSGITestCase):
 
         self.get("/asd?a=42&a=84")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual((([42, 84],), {}), asd.called_with)
+        self.assertCalledWith(asd, [42, 84])
 
     def test_application_simple_var_default(self):
         @GET("/asd")
@@ -141,7 +141,7 @@ class Test(WSGITestCase):
 
         self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((0,), {}), asd.called_with)
+        self.assertCalledWith(asd, 0)
 
     def test_application_simple_var_parse_default(self):
         @GET("/asd")
@@ -151,7 +151,7 @@ class Test(WSGITestCase):
 
         self.get("/asd?a=42")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((42,), {}), asd.called_with)
+        self.assertCalledWith(asd, 42)
 
     def test_application_simple_post(self):
         @POST("/asd")
@@ -161,7 +161,7 @@ class Test(WSGITestCase):
 
         self.post("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((), {}), asd.called_with)
+        self.assertCalledWith(asd)
 
     def test_application_simple_post_body_var(self):
         @POST("/asd")
@@ -171,7 +171,7 @@ class Test(WSGITestCase):
 
         self.post("/asd", input_=StringIO("a=hello"), content_type=MIME_WWW_FORM_URLENCODED, content_len=7)
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual((("hello",), {}), asd.called_with)
+        self.assertCalledWith(asd, "hello")
 
     def test_application_simple_post_multipart_var(self):
         @POST("/asd")
@@ -190,7 +190,7 @@ asd
                   content_type="{name}; boundary={boundary}".format(name=MIME_FORM_DATA, boundary=boundary),
                   content_len=len(body))
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual((("asd",), {}), asd.called_with)
+        self.assertCalledWith(asd, "asd")
 
     def test_application_missing_content_type(self):
         @GET("/asd")
@@ -209,7 +209,7 @@ asd
 
         result = self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((), {}), asd.called_with)
+        self.assertCalledWith(asd)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_PLAIN, self.headers[CONTENT_TYPE])
         self.assertEqual("hi", result)
@@ -222,7 +222,7 @@ asd
 
         result = self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((), {}), asd.called_with)
+        self.assertCalledWith(asd)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_JSON, self.headers[CONTENT_TYPE])
         self.assertEqual({"hello": "world"}, json.loads(result))
@@ -240,7 +240,7 @@ asd
 
         result = self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((), {}), asd.called_with)
+        self.assertCalledWith(asd)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_XML, self.headers[CONTENT_TYPE])
         self.assertEqual(parseString("<root/>").toxml(), result)
@@ -256,7 +256,7 @@ asd
 
         result = self.get("/asd")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((), {}), asd.called_with)
+        self.assertCalledWith(asd)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_XML, self.headers[CONTENT_TYPE])
         self.assertEqual(tostring(fromstring("<root/>")), tostring(fromstring(result)))
@@ -272,7 +272,7 @@ asd
 
         self.get("/asd?user=guest&password=secret")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((1,), {}), asd.called_with)
+        self.assertCalledWith(asd, 1)
 
     def test_application_simple_lambda(self):
         @GET("/asd")
@@ -282,4 +282,4 @@ asd
 
         self.get("/asd?user=guest&password=secret")
         self.assertEqual(HTTP_OK, self.status)
-        self.assertEqual(((1,), {}), asd.called_with)
+        self.assertCalledWith(asd, 1)
