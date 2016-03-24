@@ -123,6 +123,16 @@ class Test(WSGITestCase):
         self.assertEqual(HTTP_OK, self.status)
         self.assertCalledWith(asd, 42)
 
+    def test_application_simple_var_parse_order(self):
+        @GET("/asd")
+        @called_with
+        def asd(b, a=int):
+            return {}
+
+        self.get("/asd?a=42&b=hi")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, "hi", 42)
+
     def test_application_simple_var_parse_many(self):
         @GET("/asd")
         @called_with
@@ -152,6 +162,66 @@ class Test(WSGITestCase):
         self.get("/asd?a=42")
         self.assertEqual(HTTP_OK, self.status)
         self.assertCalledWith(asd, 42)
+
+    def test_application_simple_path_var(self):
+        @GET("/asd/{a}")
+        @called_with
+        def asd(a):
+            return {}
+
+        self.get("/asd/42")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, "42")
+
+    def test_application_simple_path_var_parse(self):
+        @GET("/asd/{a}")
+        @called_with
+        def asd(a=int):
+            return {}
+
+        self.get("/asd/42")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, 42)
+
+    def test_application_simple_path_var_default(self):
+        @GET("/asd/{a}")
+        @called_with
+        def asd(a=(int, 0)):
+            return {}
+
+        self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, 0)
+
+    def test_application_simple_path_var_parse_default(self):
+        @GET("/asd/{a}")
+        @called_with
+        def asd(a=(int, 0)):
+            return {}
+
+        self.get("/asd/42")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, 42)
+
+    def test_application_simple_path_var_many_1(self):
+        @GET("/asd/{a}/asd/{b}")
+        @called_with
+        def asd(a, b):
+            return {}
+
+        self.get("/asd/42/asd/hi")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, "42", "hi")
+
+    def test_application_simple_path_var_many_2(self):
+        @GET("/asd/{a}/asd/{b}")
+        @called_with
+        def asd(b, a=int):
+            return {}
+
+        self.get("/asd/42/asd/hi")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, "hi", 42)
 
     def test_application_simple_post(self):
         @POST("/asd")

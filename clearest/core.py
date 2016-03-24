@@ -61,7 +61,7 @@ def get_function_args(fn):
     if not spec.defaults:
         defaults = tuple([None] * n_args)
     else:
-        defaults = spec.defaults + tuple([None] * (n_args - len(spec.defaults)))
+        defaults = tuple([None] * (n_args - len(spec.defaults))) + spec.defaults
     return dict(zip(spec.args, defaults))
 
 
@@ -89,8 +89,15 @@ def register_content_type(type_, content_type, handler):
 
 
 def is_matching(signature, args, path, query):
-    if len(signature) != len(path):
-        return False
+    path_len = len(path)
+    signature_len = len(signature)
+    if signature_len != path_len:
+        if path_len == signature_len - 1 and \
+                isinstance(signature[-1], Key) and \
+                isinstance(args[signature[-1].name], tuple):  # last optional path var handling
+            return True
+        else:
+            return False
     return True
 
 
@@ -157,7 +164,11 @@ def application(environ, start_response):
             for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
                     try:
-                        parsed_args = parse_args(args, path, query)
+                        updated_query = query.copy()
+                        updated_query.update({key.name: [value]
+                                              for key, value in zip(signature, path)
+                                              if isinstance(key, Key)})
+                        parsed_args = parse_args(args, path, updated_query)
                     except Exception as e:
                         logging.exception(e)
                         raise HttpBadRequest()
