@@ -262,6 +262,34 @@ asd
         self.assertEqual(HTTP_OK, self.status)
         self.assertCalledWith(asd, "asd")
 
+    def test_application_simple_post_json(self):
+        @POST("/asd")
+        @called_with
+        def asd(a):
+            return {}
+
+        data = json.dumps({"a": "hello"})
+        self.post("/asd",
+                  input_=StringIO(data),
+                  content_type=MIME_JSON,
+                  content_len=len(data))
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, "hello")
+
+    def test_application_simple_post_json_multi(self):
+        @POST("/asd")
+        @called_with
+        def asd(a):
+            return {}
+
+        data = json.dumps({"a": {"x": "hello"}})
+        self.post("/asd",
+                  input_=StringIO(data),
+                  content_type=MIME_JSON,
+                  content_len=len(data))
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, {"x": "hello"})
+
     def test_application_missing_content_type(self):
         @GET("/asd")
         @called_with

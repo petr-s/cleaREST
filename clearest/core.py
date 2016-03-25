@@ -127,16 +127,22 @@ def parse_args(args, path, query):
 
 
 def application(environ, start_response):
-    def parse_www_form(input_file, n, rest):
+    def parse_content_type(value):
+        parts = value.split(";")
+        return (parts[0], {k.lstrip(): v for k, v in
+                           (kv.split("=") for kv in parts[1:])}) if len(parts) > 1 else (value, {})
+
+    def parse_www_form(input_file, n, extras):
         return parse_qs(input_file.read(n))
 
-    def parse_form_data(input_file, n, rest):
+    def parse_form_data(input_file, n, extras):
+        if "boundary" not in extras:
+            raise HttpUnsupportedMediaType()
         kwargs = {}
-        boundary = re.match(" boundary=(.*)", rest).group(1)
         state = 0  # TODO: enum
         name = None
         for line in input_file.read(n).splitlines():
-            if state == 0 and line == boundary:
+            if state == 0 and line == extras["boundary"]:
                 state = 1
             elif state == 1 and line.startswith(CONTENT_DISPOSITION):
                 name = re.match(CONTENT_DISPOSITION + ": form\-data; name=\"(.*)\"", line).group(1)
@@ -148,19 +154,24 @@ def application(environ, start_response):
                 state = 0
         return kwargs
 
+    def parse_json(input_file, n, extras):
+        encoding = "utf-8" if "encoding" not in extras else extras["encoding"]
+        return {k: [v] for k, v in six.iteritems(json.loads(input_file.read(n), encoding=encoding))}
+
     content_types = {MIME_WWW_FORM_URLENCODED: parse_www_form,
-                     MIME_FORM_DATA: parse_form_data}
+                     MIME_FORM_DATA: parse_form_data,
+                     MIME_JSON: parse_json}
     try:
         if environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
             if WSGI_CONTENT_TYPE in environ:
-                temp = environ[WSGI_CONTENT_TYPE].split(";")
-                assert len(temp) <= 2
-                content_type, rest = temp if len(temp) == 2 else (temp[0], None)
+                content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:
                     raise HttpUnsupportedMediaType()
-                query.update(content_types[content_type](environ[WSGI_INPUT], int(environ[WSGI_CONTENT_LENGTH]), rest))
+                query.update(content_types[content_type](environ[WSGI_INPUT],
+                                                         int(environ[WSGI_CONTENT_LENGTH]),
+                                                         extras_))
             for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
                     try:
