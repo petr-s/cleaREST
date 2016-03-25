@@ -136,7 +136,7 @@ def application(environ, start_response):
         return parse_qs(input_file.read(n))
 
     def parse_form_data(input_file, n, extras):
-        assert "boundary" not in extras
+        assert "boundary" in extras
         kwargs = {}
         state = 0  # TODO: enum
         name = None
