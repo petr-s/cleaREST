@@ -7,76 +7,88 @@
 ========
 cleaREST
 ========
-**Light-weight Python framework for building REST APIs**
- * pure WSGI
- * minimalistic
- * easy to use
- * advanced variables processing
+
+Light-weight Python framework for building REST APIs
+
+* WSGI
+* minimalistic
+* easy to use
+* advanced variables processing
 
 
 URL Routing
 ===========
+
 is done by decorating your handling function with one of these decorators:
- * @GET
- * @POST
+
+* @GET
+* @POST
 
 only one argument is required (url to handle) ie: ::
 
   @GET("/my/awesome/url")
+  def my_function():
+      ...
 
 optionally you can specify successful http result status (default is HTTP_OK) ie: ::
 
   @GET("/my/awesome/url", status=HTTP_CREATED)
+  def my_function():
+      ...
 
 list of status tuples:
- * HTTP_OK
- * HTTP_CREATED
 
-you can also specify url path variables, with curly brackets similarly to python string formating ie: ::
+* HTTP_OK
+* HTTP_CREATED
 
-  @GET("/my/awesome/url/{variable}")
 
 
 Variables
 =========
-are specified directly to a function ie: ::
 
-  @GET("/my/awesome/url")
-  def my_function(first, second):
-    ...
+- GET variables from query string
 
-so when you call GET with query string like:
+* POST variables can be send as:
 
-  curl localhost:8001/my/awesome/url?first=hello&second=world
-
-those values are directly passed to the handling function.
-
-**POST variables** can be send either as:
  * application/x-www-form-urlencoded
-or
  * multipart/form-data
+ * application/json
+
+* url path variables (identifier inside curly brackets) ie: ::
+
+   @GET("/my/awesome/url/{variable}")
+   def my_function(variable):
+       ...
+
 
 
 Parsing
 =======
-when variable is passed to the function it's a string, you can specify per parameter parsing function as default value ie: ::
+
+per parameter parsing function assigned as default value ie: ::
 
   @GET("/my/awesome/url")
   def my_function(myid=int):
+      ...
 
-or optinal: ::
+optional parameter: ::
 
   @GET("/my/awesome/url")
   def my_function(myid=(int, 0)):
+      ...
 
-or reduction multiple arguments into one: ::
+reduction multiple into one: ::
 
   @GET("/my/awesome/url")
-  def my_function(user_id=lambda user, password: login)
+  def my_function(user_id=lambda user, password: login):
+      ...
+
+
 
 Returning data
 ==============
-just return value, there is build-in support for serializing:
+
+build-in support:
 
 +---------+-------------------+
 | Class   | Content-type      |
@@ -90,18 +102,21 @@ just return value, there is build-in support for serializing:
 | etree   | application/xml   |
 +---------+-------------------+
 
-but also you can register any custom data-type or override table above with: ::
+you can also register any custom data-type or override table above with: ::
 
   register_content_type(type_, content_type, handler)
 
 
+
 Errors
 ======
-you can return a http error by raising one of these exceptions:
- * HttpBadRequest
- * HttpNotFound
- * HttpUnsupportedMediaType
- * HttpNotImplemented
+
+to return a http error raise one of these exceptions:
+
+* HttpBadRequest
+* HttpNotFound
+* HttpUnsupportedMediaType
+* HttpNotImplemented
 
 ie: ::
 
@@ -115,6 +130,7 @@ ie: ::
 =========
 Examples:
 =========
+
 **GET Hello world:** ::
 
   from wsgiref.simple_server import make_server
