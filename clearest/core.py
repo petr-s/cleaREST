@@ -98,7 +98,11 @@ def is_matching(signature, args, path, query):
             return True
         else:
             return False
-    return True
+    for s, p in zip(signature, path):
+        if not isinstance(s, Key) and s != p:
+            return False
+    else:
+        return True
 
 
 def parse_args(args, path, query):

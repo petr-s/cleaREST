@@ -103,6 +103,24 @@ class Test(WSGITestCase):
         self.assertEqual(HTTP_OK, self.status)
         self.assertCalledWith(asd)
 
+    def test_application_simple_multiple_registered(self):
+        @GET("/asd")
+        @called_with
+        def asd():
+            return {}
+
+        @GET("/asd2")
+        @called_with
+        def asd2():
+            return {}
+
+        self.get("/asd")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd)
+        self.get("/asd2")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd2)
+
     def test_application_simple_var(self):
         @GET("/asd")
         @called_with
