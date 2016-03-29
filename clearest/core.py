@@ -21,12 +21,14 @@ from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, No
     HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest, HttpNotImplemented
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED, \
     MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML
-from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH
+from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH, \
+    HTTP_ACCEPT
 
 KEY_PATTERN = re.compile("\{(.*)\}")
 STATUS_FMT = "{0} {1}"
 CALLABLE = 0
 DEFAULT = 1
+ACCEPT_MIMES = "accept_mimes"
 _content_types = {}
 
 
@@ -105,14 +107,16 @@ def is_matching(signature, args, path, query):
         return True
 
 
-def parse_args(args, path, query):
+def parse_args(args, path, query, specials):
     def one_or_many(fn_, dict_, key):
         result = [fn_(value) for value in dict_[key]]
         return result[0] if len(result) == 1 else result
 
     kwargs = {}
     for arg, parse_fn in six.iteritems(args):
-        if parse_fn is None:
+        if arg in specials:
+            kwargs[arg] = specials[arg]()
+        elif parse_fn is None:
             kwargs[arg] = one_or_many(lambda x: x, query, arg)
         elif isinstance(parse_fn, tuple):
             kwargs[arg] = parse_fn[DEFAULT] if arg not in query else one_or_many(parse_fn[CALLABLE], query, arg)
@@ -124,7 +128,7 @@ def parse_args(args, path, query):
                 fn = closures[0].cell_contents
             else:
                 fn = eval(".".join(_code.co_names), six.get_function_globals(parse_fn))
-            kwargs[arg] = fn(**parse_args(get_function_args(parse_fn), path, query))
+            kwargs[arg] = fn(**parse_args(get_function_args(parse_fn), path, query, specials))
         else:
             kwargs[arg] = one_or_many(parse_fn, query, arg)
     return kwargs
@@ -161,14 +165,26 @@ def application(environ, start_response):
         encoding = "utf-8" if "encoding" not in extras else extras["encoding"]
         return {k: [v] for k, v in six.iteritems(json.loads(input_file.read(n), encoding=encoding))}
 
+    def parse_accept():
+        result = []
+        parts = (x.split(";") for x in environ[HTTP_ACCEPT].split(","))
+        for part in parts:
+            if len(part) == 1:
+                result.append((1.0, part[0]))
+            else:
+                mime, q = part
+                result.append((float(q[2:]), mime))
+        return tuple(value for (weight, value) in sorted(result, key=lambda x: x[0], reverse=True))
+
     content_types = {MIME_WWW_FORM_URLENCODED: parse_www_form,
                      MIME_FORM_DATA: parse_form_data,
                      MIME_JSON: parse_json}
+    specials = {ACCEPT_MIMES: parse_accept}
     try:
         if environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
-            if WSGI_CONTENT_TYPE in environ:
+            if WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
                 content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:
                     raise HttpUnsupportedMediaType()
@@ -182,7 +198,7 @@ def application(environ, start_response):
                         updated_query.update({key.name: [value]
                                               for key, value in zip(signature, path)
                                               if isinstance(key, Key)})
-                        parsed_args = parse_args(args, path, updated_query)
+                        parsed_args = parse_args(args, path, updated_query, specials)
                     except Exception as e:
                         logging.exception(e)
                         raise HttpBadRequest()

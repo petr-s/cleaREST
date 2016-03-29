@@ -18,7 +18,7 @@ class WSGITestCase(TestCase):
         self.status = HttpStatus(code=int(code), msg=msg)
         self.headers = dict(headers)
 
-    def request(self, app, method, query, input_, content_type=None, content_len=0):
+    def request(self, app, method, query, input_, content_type=None, content_len=0, accept=None):
         assert method in HTTP_METHODS
         env = {REQUEST_METHOD: method,
                SERVER_PROTOCOL: HTTP_1_1,
@@ -35,14 +35,16 @@ class WSGITestCase(TestCase):
             env[WSGI_CONTENT_TYPE] = content_type
         if content_len > 0:
             env[WSGI_CONTENT_LENGTH] = content_len
+        if accept:
+            env[HTTP_ACCEPT] = accept
         result = None
         for data in app(env, self._start_response):  # TODO: PY2 vs PY3 string/bytes
             result = data
             break
         return result
 
-    def get(self, query, app=application):
-        return self.request(app, HTTP_GET, query, None)
+    def get(self, query, app=application, **kwargs):
+        return self.request(app, HTTP_GET, query, None, **kwargs)
 
     def post(self, query, app=application, input_=None, content_type=None, content_len=0):
         return self.request(app, HTTP_POST, query, input_, content_type, content_len)

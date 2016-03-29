@@ -399,3 +399,33 @@ asd
         self.get("/asd?user=guest&password=secret")
         self.assertEqual(HTTP_OK, self.status)
         self.assertCalledWith(asd, 1)
+
+    def test_application_http_accept_1(self):
+        @GET("/asd")
+        @called_with
+        def asd(accept_mimes):
+            return {}
+
+        self.get("/asd", accept="text/html")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, ("text/html",))
+
+    def test_application_http_accept_2(self):
+        @GET("/asd")
+        @called_with
+        def asd(accept_mimes):
+            return {}
+
+        self.get("/asd", accept="text/html,application/xml;q=0.9")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, ("text/html", "application/xml"))
+
+    def test_application_http_accept_3(self):
+        @GET("/asd")
+        @called_with
+        def asd(accept_mimes):
+            return {}
+
+        self.get("/asd", accept="text/html;q=0.5,application/xml")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, ("application/xml", "text/html"))
