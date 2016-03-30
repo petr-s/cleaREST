@@ -3,15 +3,14 @@ from tests.wsgi import WSGITestCase
 
 
 def strip_ws(source):
-    return source.strip(" \t\n\r")
+    return "".join(source.split())
 
 
 class Test(WSGITestCase):
     def setUp(self):
         unregister_all()
 
-    @property
-    def test_docs(self):
+    def test_docs_1(self):
         @GET("/asd")
         def asd():
             """asd"""
