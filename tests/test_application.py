@@ -2,9 +2,7 @@ import json
 
 from six import StringIO
 
-from clearest import POST, HTTP_NOT_FOUND, GET, unregister_all, HTTP_OK, HTTP_UNSUPPORTED_MEDIA_TYPE, \
-    MIME_WWW_FORM_URLENCODED, MIME_FORM_DATA, HTTP_CREATED, HTTP_BAD_REQUEST, HttpNotFound, CONTENT_TYPE, \
-    MIME_TEXT_PLAIN, MIME_JSON, HTTP_NOT_IMPLEMENTED, MIME_XML
+from clearest import *
 from tests.util import called_with
 from tests.wsgi import WSGITestCase
 
