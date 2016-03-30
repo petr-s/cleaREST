@@ -18,8 +18,10 @@ HTTP_METHODS = (HTTP_GET, HTTP_POST)
 HTTP_PROTOCOLS = (HTTP_1_0, HTTP_1_1)
 
 MIME_TEXT_PLAIN = "text/plain"
+MIME_TEXT_HTML = "text/html"
 MIME_JSON = "application/json"
 MIME_XML = "application/xml"
+MIME_XHTML_XML = "application/xhtml+xml"
 MIME_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded"
 MIME_FORM_DATA = "multipart/form-data"
 

@@ -19,6 +19,8 @@ __all__ = [
     "MIME_JSON",
     "MIME_TEXT_PLAIN",
     "MIME_XML",
+    "MIME_TEXT_HTML",
+    "MIME_XHTML_XML",
 
     "HttpNotFound",
 

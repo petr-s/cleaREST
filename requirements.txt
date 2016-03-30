@@ -1,2 +1,3 @@
 six==1.10.0
 decorator==4.0.9
+jinja2==2.8

@@ -10,6 +10,8 @@ from types import LambdaType
 from xml.dom.minidom import Document
 from xml.etree.ElementTree import tostring, Element
 
+from jinja2 import PackageLoader, Environment
+
 try:  # pragma: no cover
     from urllib.parse import parse_qs  # pragma: no cover
 except ImportError:  # pragma: no cover
@@ -20,7 +22,7 @@ import six
 from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
     HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest, HttpNotImplemented
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED, \
-    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML
+    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML, MIME_XHTML_XML
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH, \
     HTTP_ACCEPT
 
@@ -42,6 +44,10 @@ class Key(object):
 
     def __hash__(self):
         return hash(self.pre)
+
+
+def signature_to_path(signature):
+    return "/" + "/".join("{%s}" % x.name if isinstance(x, Key) else x for x in signature)
 
 
 def parse_path(path):
@@ -134,6 +140,13 @@ def parse_args(args, path, query, specials):
     return kwargs
 
 
+def generate_docs(**kwargs):
+    kwargs.update({"clearest_version": "0.3"})
+    env = Environment(loader=PackageLoader("clearest", "templates"))
+    template = env.get_template("single.html")
+    return template.render(kwargs)
+
+
 def application(environ, start_response):
     def parse_content_type(value):
         parts = value.split(";")
@@ -166,15 +179,18 @@ def application(environ, start_response):
         return {k: [v] for k, v in six.iteritems(json.loads(input_file.read(n), encoding=encoding))}
 
     def parse_accept():
-        result = []
-        parts = (x.split(";") for x in environ[HTTP_ACCEPT].split(","))
-        for part in parts:
-            if len(part) == 1:
-                result.append((1.0, part[0]))
-            else:
-                mime, q = part
-                result.append((float(q[2:]), mime))
-        return tuple(value for (weight, value) in sorted(result, key=lambda x: x[0], reverse=True))
+        if HTTP_ACCEPT in environ:
+            result = []
+            parts = (x.split(";") for x in environ[HTTP_ACCEPT].split(","))
+            for part in parts:
+                if len(part) == 1:
+                    result.append((1.0, part[0]))
+                else:
+                    mime, q = part
+                    result.append((float(q[2:]), mime))
+            return tuple(value for (weight, value) in sorted(result, key=lambda x: x[0], reverse=True))
+        else:
+            return {}
 
     content_types = {MIME_WWW_FORM_URLENCODED: parse_www_form,
                      MIME_FORM_DATA: parse_form_data,
@@ -184,7 +200,15 @@ def application(environ, start_response):
         if environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
-            if WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
+            if environ[REQUEST_METHOD] == HTTP_GET and MIME_XHTML_XML in parse_accept():
+                start_response(STATUS_FMT.format(*HTTP_OK), [(CONTENT_TYPE, MIME_XHTML_XML)])
+                for method in six.iterkeys(BaseDecorator.registered):
+                    for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[method]):
+                        if is_matching(signature, args, path, query):
+                            return [generate_docs(method=method,
+                                                  path=signature_to_path(signature),
+                                                  docs=fn.__doc__)]
+            elif WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
                 content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:
                     raise HttpUnsupportedMediaType()
@@ -239,7 +263,7 @@ class BaseDecorator(object):
         registered = BaseDecorator.registered[self.type()]
         if self.path in registered:
             old = registered[self.path][0].__name__
-            path = "/".join(x.name if isinstance(x, Key) else x for x in self.path)
+            path = signature_to_path(self.path)  # "/".join(x.name if isinstance(x, Key) else x for x in self.path)
             raise AlreadyRegisteredError(path, old)
         fn_args = get_function_args(fn)
         check_function(self.path, fn.__name__, fn_args)
