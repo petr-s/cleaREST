@@ -19,6 +19,8 @@ HTTP_PROTOCOLS = (HTTP_1_0, HTTP_1_1)
 
 MIME_TEXT_PLAIN = "text/plain"
 MIME_TEXT_HTML = "text/html"
+MIME_TEXT_CSS = "text/css"
+MIME_JAVASCRIPT = "application/javascript"
 MIME_JSON = "application/json"
 MIME_XML = "application/xml"
 MIME_XHTML_XML = "application/xhtml+xml"

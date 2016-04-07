@@ -2,6 +2,7 @@ import functools
 import inspect
 import json
 import logging
+import os
 import re
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
@@ -22,7 +23,7 @@ import six
 from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
     HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest, HttpNotImplemented
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED, \
-    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML, MIME_XHTML_XML
+    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML, MIME_XHTML_XML, MIME_TEXT_CSS, MIME_JAVASCRIPT
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH, \
     HTTP_ACCEPT
 
@@ -32,6 +33,8 @@ CALLABLE = 0
 DEFAULT = 1
 ACCEPT_MIMES = "accept_mimes"
 _content_types = {}
+_static_content_types = {}
+_static_files = {}
 
 
 class Key(object):
@@ -147,6 +150,30 @@ def generate_docs(**kwargs):
     return template.render(kwargs)
 
 
+def add_static_file(path, readable, content_type=None):
+    if not content_type:
+        ext = os.path.splitext(path)[1]
+        if ext not in _static_content_types:
+            raise KeyError()
+        else:
+            content_type = _static_content_types[ext]
+    _static_files[path] = content_type, readable.read()
+
+
+def add_static_dir(path, dir_path, open_fn=open):
+    for root, sub_dirs, files in os.walk(dir_path):
+        for file_ in files:
+            add_static_file("/".join((path, file_)), open_fn(file_, "rb"))
+
+
+def register_static_content_type(ext, content_type):
+    _static_content_types[ext] = content_type
+
+
+def remove_all_static_files():
+    _static_files.clear()
+
+
 def application(environ, start_response):
     def parse_content_type(value):
         parts = value.split(";")
@@ -197,7 +224,11 @@ def application(environ, start_response):
                      MIME_JSON: parse_json}
     specials = {ACCEPT_MIMES: parse_accept}
     try:
-        if environ[REQUEST_METHOD] in all_registered():
+        if environ[REQUEST_METHOD] == HTTP_GET and environ[PATH_INFO] in _static_files:
+            content_type, content = _static_files[environ[PATH_INFO]]
+            start_response(STATUS_FMT.format(*HTTP_OK), [(CONTENT_TYPE, content_type)])
+            return [content]
+        elif environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
             if environ[REQUEST_METHOD] == HTTP_GET and MIME_XHTML_XML in parse_accept():
@@ -289,3 +320,6 @@ register_content_type(str, MIME_TEXT_PLAIN, lambda x: x)
 register_content_type(dict, MIME_JSON, json.dumps)
 register_content_type(Document, MIME_XML, lambda x: x.toxml())
 register_content_type(Element, MIME_XML, lambda x: tostring(x))
+
+register_static_content_type(".css", MIME_TEXT_CSS)
+register_static_content_type(".js", MIME_JAVASCRIPT)

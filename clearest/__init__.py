@@ -1,4 +1,5 @@
-from clearest.core import GET, POST, CONTENT_TYPE, unregister_all
+from clearest.core import GET, POST, CONTENT_TYPE, unregister_all, \
+    add_static_file, add_static_dir, remove_all_static_files
 from clearest.exceptions import *
 from clearest.http import *
 
@@ -20,7 +21,9 @@ __all__ = [
     "MIME_TEXT_PLAIN",
     "MIME_XML",
     "MIME_TEXT_HTML",
+    "MIME_TEXT_CSS",
     "MIME_XHTML_XML",
+    "MIME_JAVASCRIPT",
 
     "HttpNotFound",
 
@@ -28,5 +31,8 @@ __all__ = [
     "AlreadyRegisteredError",
     "NotUniqueError",
 
-    "unregister_all"
+    "unregister_all",
+    "add_static_file",
+    "add_static_dir",
+    "remove_all_static_files"
 ]
