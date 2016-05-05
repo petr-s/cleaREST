@@ -7,7 +7,6 @@ import re
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from types import LambdaType
 from xml.dom.minidom import Document
 from xml.etree.ElementTree import tostring, Element
 
@@ -116,6 +115,11 @@ def is_matching(signature, args, path, query):
         return True
 
 
+def isalambda(object_):
+    LAMBDA = lambda: 0
+    return isinstance(object_, type(LAMBDA)) and object_.__name__ == LAMBDA.__name__
+
+
 def parse_args(args, path, query, specials):
     def one_or_many(fn_, dict_, key):
         result = [fn_(value) for value in dict_[key]]
@@ -129,7 +133,7 @@ def parse_args(args, path, query, specials):
             kwargs[arg] = one_or_many(lambda x: x, query, arg)
         elif isinstance(parse_fn, tuple):
             kwargs[arg] = parse_fn[DEFAULT] if arg not in query else one_or_many(parse_fn[CALLABLE], query, arg)
-        elif isinstance(parse_fn, LambdaType):
+        elif isalambda(parse_fn):
             _code = six.get_function_code(parse_fn)
             closures = six.get_function_closure(parse_fn)
             if closures:

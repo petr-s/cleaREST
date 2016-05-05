@@ -11,6 +11,10 @@ def g_login(user, password):
     return 1
 
 
+def to_int(x):
+    return int(x)
+
+
 class Test(WSGITestCase):
     def setUp(self):
         unregister_all()
@@ -133,6 +137,16 @@ class Test(WSGITestCase):
         @GET("/asd")
         @called_with
         def asd(a=int):
+            return {}
+
+        self.get("/asd?a=42")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd, 42)
+
+    def test_application_simple_var_parse(self):
+        @GET("/asd")
+        @called_with
+        def asd(a=to_int):
             return {}
 
         self.get("/asd?a=42")
