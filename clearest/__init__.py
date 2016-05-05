@@ -44,3 +44,8 @@ __all__ = [
     "add_static_dir",
     "remove_all_static_files"
 ]
+
+__version__ = "0.2.0"
+__author__ = "Petr Skramovsky"
+__contact__ = "petr.skramovsky@gmail.com"
+__homepage__ = "https://github.com/petr-s/cleaREST"

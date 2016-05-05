@@ -1,15 +1,17 @@
 from setuptools import setup
 
+import clearest
+
 setup(
     name="cleaREST",
-    version="0.2.0",
-    author="Petr Skramovsky",
-    author_email="petr.skramovsky@gmail.com",
+    version=clearest.__version__,
+    author=clearest.__author__,
+    author_email=clearest.__contact__,
     description="Light-weight Python framework for building REST APIs.",
     license="MIT",
     keywords="rest api framework json xml",
-    url="https://github.com/petr-s/cleaREST",
-    packages=["clearest", "tests"],
+    url=clearest.__homepage__,
+    packages=["clearest", "tests", "sample"],
     test_suite="tests",
     long_description=open("README.rst").read(),
     classifiers=[
