@@ -14,6 +14,9 @@ __all__ = [
     "HTTP_OK",
     "HTTP_CREATED",
     "HTTP_NOT_IMPLEMENTED",
+    "HTTP_UNAUTHORIZED",
+    "HTTP_FORBIDDEN",
+    "HTTP_GONE",
 
     "MIME_WWW_FORM_URLENCODED",
     "MIME_FORM_DATA",
@@ -25,7 +28,12 @@ __all__ = [
     "MIME_XHTML_XML",
     "MIME_JAVASCRIPT",
 
+    "HttpBadRequest",
+    "HttpUnauthorized",
+    "HttpForbidden",
     "HttpNotFound",
+    "HttpGone",
+    "HttpUnsupportedMediaType",
 
     "MissingArgumentError",
     "AlreadyRegisteredError",

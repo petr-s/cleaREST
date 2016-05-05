@@ -85,16 +85,6 @@ class Test(WSGITestCase):
         self.assertEqual(HTTP_CREATED, self.status)
         self.assertEqual(((), {}), asd.called_with)
 
-    def test_application_raise_custom(self):
-        @GET("/asd")
-        @called_with
-        def asd():
-            raise HttpNotFound()
-            return {}
-
-        self.get("/asd")
-        self.assertEqual(HTTP_NOT_FOUND, self.status)
-
     def test_application_simple_query(self):
         @GET("/asd")
         @called_with

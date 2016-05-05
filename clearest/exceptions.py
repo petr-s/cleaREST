@@ -1,4 +1,4 @@
-from clearest.http import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_UNSUPPORTED_MEDIA_TYPE, HTTP_NOT_IMPLEMENTED
+from clearest.http import *
 
 
 class MissingArgumentError(Exception):
@@ -35,9 +35,24 @@ class HttpBadRequest(HttpError):
         super(HttpBadRequest, self).__init__(*HTTP_BAD_REQUEST)
 
 
+class HttpUnauthorized(HttpError):
+    def __init__(self):
+        super(HttpUnauthorized, self).__init__(*HTTP_UNAUTHORIZED)
+
+
+class HttpForbidden(HttpError):
+    def __init__(self):
+        super(HttpForbidden, self).__init__(*HTTP_FORBIDDEN)
+
+
 class HttpNotFound(HttpError):
     def __init__(self):
         super(HttpNotFound, self).__init__(*HTTP_NOT_FOUND)
+
+
+class HttpGone(HttpError):
+    def __init__(self):
+        super(HttpGone, self).__init__(*HTTP_GONE)
 
 
 class HttpUnsupportedMediaType(HttpError):
