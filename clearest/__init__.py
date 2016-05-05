@@ -1,5 +1,6 @@
 from clearest.core import GET, POST, CONTENT_TYPE, unregister_all, \
     add_static_file, add_static_dir, remove_all_static_files
+from clearest.docs import set_templates_path
 from clearest.exceptions import *
 from clearest.http import *
 
@@ -40,9 +41,12 @@ __all__ = [
     "NotUniqueError",
 
     "unregister_all",
+
     "add_static_file",
     "add_static_dir",
-    "remove_all_static_files"
+    "remove_all_static_files",
+
+    "set_templates_path"
 ]
 
 __version__ = "0.2.0"

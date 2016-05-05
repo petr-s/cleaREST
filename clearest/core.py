@@ -10,7 +10,7 @@ from copy import deepcopy
 from xml.dom.minidom import Document
 from xml.etree.ElementTree import tostring, Element
 
-from jinja2 import PackageLoader, Environment
+from clearest.docs import generate_single
 
 try:  # pragma: no cover
     from urllib.parse import parse_qs  # pragma: no cover
@@ -147,13 +147,6 @@ def parse_args(args, path, query, specials):
     return kwargs
 
 
-def generate_docs(**kwargs):
-    kwargs.update({"clearest_version": "0.3"})
-    env = Environment(loader=PackageLoader("clearest", "templates"))
-    template = env.get_template("single.html")
-    return template.render(kwargs)
-
-
 def add_static_file(path, readable, content_type=None):
     if not content_type:
         ext = os.path.splitext(path)[1]
@@ -240,9 +233,9 @@ def application(environ, start_response):
                 for method in six.iterkeys(BaseDecorator.registered):
                     for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[method]):
                         if is_matching(signature, args, path, query):
-                            return [generate_docs(method=method,
-                                                  path=signature_to_path(signature),
-                                                  docs=fn.__doc__)]
+                            return [generate_single(method=method,
+                                                    path=signature_to_path(signature),
+                                                    doc_string=fn.__doc__)]
             elif WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
                 content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:
