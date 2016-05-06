@@ -16,10 +16,9 @@ class Test(WSGITestCase):
     def setUp(self):
         unregister_all()
 
-    def test_docs_simple(self):
+    def test_docs_none(self):
         @GET("/asd")
         def asd():
-            """doc_string"""
             return {}
 
         result = self.get("/asd", accept=BROWSER_ACCEPT)
@@ -29,6 +28,76 @@ class Test(WSGITestCase):
         self.assertIsNotNone(result)
         self.assertTrue("GET" in result)
         self.assertTrue("/asd" in result)
+
+    def test_docs_empty(self):
+        @GET("/asd")
+        def asd():
+            """"""
+            return {}
+
+        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_XHTML_XML, self.headers[CONTENT_TYPE])
+        self.assertIsNotNone(result)
+        self.assertTrue("GET" in result)
+        self.assertTrue("/asd" in result)
+
+    def test_docs_simple(self):
+        @GET("/asd")
+        def asd():
+            """
+            asd function
+            """
+            return {}
+
+        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_XHTML_XML, self.headers[CONTENT_TYPE])
+        self.assertIsNotNone(result)
+        self.assertTrue("GET" in result)
+        self.assertTrue("/asd" in result)
+        self.assertTrue("asd function" in result)
+
+    def test_docs_complex(self):
+        @GET("/asd")
+        def asd(first, second=int):
+            """
+            this is a sample function
+
+            :param str first: First parameter
+            :param int second: Second parameter
+            :return: json copy of arguments
+
+            :example::
+
+                GET /asd?first=hi&second=42
+
+            :rexample::
+
+                {
+                    "first": "first",
+                    "second": 42
+                }
+            """
+            return {"first": first, "second": second}
+
+        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_XHTML_XML, self.headers[CONTENT_TYPE])
+        self.assertIsNotNone(result)
+        self.assertTrue("GET" in result)
+        self.assertTrue("/asd" in result)
+        self.assertTrue("this is a sample function" in result)
+        self.assertTrue("First parameter" in result)
+        self.assertTrue("str" in result)
+        self.assertTrue("Second parameter" in result)
+        self.assertTrue("int" in result)
+        self.assertTrue("json copy of arguments" in result)
+        self.assertTrue("GET /asd?first=hi&second=42" in result)
+        self.assertTrue(strip_ws("""{"first": "first", "second": 42}""") in strip_ws(result))
 
     @patch("jinja2.FileSystemLoader.get_source")
     def test_docs_custom_template(self, mock_get_source):

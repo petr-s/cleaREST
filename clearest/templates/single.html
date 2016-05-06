@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Title{% endblock %}
+{% block title %}API documentation{% endblock %}
 {% block head %}
 {{ super() }}
 
@@ -7,5 +7,29 @@
 {% block content %}
 {{method}}
 {{path}}
-{{docs}}
+
+{% if text is defined %}
+{{text}}
+{% endif %}
+
+{% if params is defined %}
+{% for param in params %}
+{{param.name}}
+{{param.type}}
+{{param.docs}}
+{% endfor %}
+{% endif %}
+
+{% if return is defined %}
+{{return}}
+{% endif %}
+
+{% if example is defined %}
+{{example}}
+{% endif %}
+
+{% if result_example is defined %}
+{{result_example}}
+{% endif %}
+
 {% endblock %}
