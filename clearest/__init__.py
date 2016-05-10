@@ -51,7 +51,7 @@ __all__ = [
     "set_templates_path"
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __author__ = "Petr Skramovsky"
 __contact__ = "petr.skramovsky@gmail.com"
 __homepage__ = "https://github.com/petr-s/cleaREST"
