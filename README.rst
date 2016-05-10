@@ -14,6 +14,7 @@ Light-weight Python framework for building REST APIs
 * minimalistic
 * easy to use
 * advanced variables processing
+* automatic html documentation generation
 
 
 URL Routing
@@ -125,6 +126,41 @@ ie: ::
       if myid == -1:
            raise HttpNotFound()
       ...
+
+HTML Documentation
+==================
+
+when is url opened by web-browser html documentation is shown instead of actual function call.
+* "application/xhtml+xml" in accept http header
+* similar tags to sphinx/docutils
+* extra example tags: ":example:" and for response ":rexample":
+
+ie: ::
+
+  @GET("/my/api")
+  def my_function(a, b=int):
+      """
+      Describe your function here.
+
+      :param str a: Describe a here.
+      :param int b: Describe b here.
+      :return: W/E you function returns.
+
+      :example::
+
+          GET /my/api?a=someting&b=42
+
+      :rexample::
+
+          {
+              "something": "something"
+              ...
+          }
+      """
+      ...
+
+"real app" example:
+.. image:: https://cloud.githubusercontent.com/assets/4590121/15144637/01abb660-16b1-11e6-85b4-bdb46d33e3cf.png
 
 
 =========

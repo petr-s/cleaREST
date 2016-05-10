@@ -1,5 +1,5 @@
 from clearest.core import GET, POST, CONTENT_TYPE, unregister_all, \
-    add_static_file, add_static_dir, remove_all_static_files
+    add_static_file, add_static_dir, remove_all_static_files, application
 from clearest.docs import set_templates_path
 from clearest.exceptions import *
 from clearest.http import *
@@ -39,6 +39,8 @@ __all__ = [
     "MissingArgumentError",
     "AlreadyRegisteredError",
     "NotUniqueError",
+
+    "application",
 
     "unregister_all",
 

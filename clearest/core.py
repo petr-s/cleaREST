@@ -22,7 +22,8 @@ import six
 from clearest.exceptions import MissingArgumentError, AlreadyRegisteredError, NotUniqueError, HttpError, \
     HttpNotFound, NotRootError, HttpUnsupportedMediaType, HttpBadRequest, HttpNotImplemented
 from clearest.http import HTTP_GET, HTTP_POST, CONTENT_TYPE, MIME_TEXT_PLAIN, HTTP_OK, MIME_WWW_FORM_URLENCODED, \
-    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML, MIME_XHTML_XML, MIME_TEXT_CSS, MIME_JAVASCRIPT
+    MIME_FORM_DATA, CONTENT_DISPOSITION, MIME_JSON, MIME_XML, MIME_XHTML_XML, MIME_TEXT_CSS, MIME_JAVASCRIPT, \
+    MIME_TEXT_HTML
 from clearest.wsgi import REQUEST_METHOD, PATH_INFO, QUERY_STRING, WSGI_INPUT, WSGI_CONTENT_TYPE, WSGI_CONTENT_LENGTH, \
     HTTP_ACCEPT
 
@@ -229,13 +230,13 @@ def application(environ, start_response):
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
             if environ[REQUEST_METHOD] == HTTP_GET and MIME_XHTML_XML in parse_accept():
-                start_response(STATUS_FMT.format(*HTTP_OK), [(CONTENT_TYPE, MIME_XHTML_XML)])
+                start_response(STATUS_FMT.format(*HTTP_OK), [(CONTENT_TYPE, MIME_TEXT_HTML)])
                 for method in six.iterkeys(BaseDecorator.registered):
                     for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[method]):
                         if is_matching(signature, args, path, query):
                             return [generate_single(method=method,
                                                     path=signature_to_path(signature),
-                                                    doc_string=fn.__doc__)]
+                                                    doc_string=fn.__doc__).encode("utf-8")]
             elif WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
                 content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:

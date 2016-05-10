@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import six
 from six import StringIO
 
 from clearest.core import application
@@ -39,7 +40,10 @@ class WSGITestCase(TestCase):
             env[HTTP_ACCEPT] = accept
         result = None
         for data in app(env, self._start_response):  # TODO: PY2 vs PY3 string/bytes
-            result = data
+            if six.PY3 and isinstance(data, bytes):
+                result = data.decode("utf-8")
+            else:
+                result = data
             break
         return result
 

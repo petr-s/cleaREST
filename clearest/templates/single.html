@@ -2,34 +2,71 @@
 {% block title %}API documentation{% endblock %}
 {% block head %}
 {{ super() }}
+<style>
+.parameters {
+    border-collapse: collapse;
+    width: 100%;
+}
 
+.parameters th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+}
+
+.parameters th {
+    background-color: #e6f2ff;
+}
+
+
+</style>
 {% endblock %}
+{% block header %}<h1>API documentation</h1>{% endblock %}
 {% block content %}
-{{method}}
-{{path}}
 
+<h2>{{method}} {{path}}</h2>
 {% if text is defined %}
-{{text}}
+<span>{{text}}</span>
 {% endif %}
 
 {% if params is defined %}
-{% for param in params %}
-{{param.name}}
-{{param.type}}
-{{param.docs}}
-{% endfor %}
+<h3>Query parameters:</h3>
+<table class="parameters">
+    <tr>
+        <th align="left">parameter</th>
+        <th align="left">type</th>
+        <th align="left">description</th>
+    </tr>
+    {% for param in params %}
+    <tr>
+        <td>{{param.name}}</td>
+        <td>{{param.type}}</td>
+        <td>{{param.docs}}</td>
+    </tr>
+    {% endfor %}
+</table>
 {% endif %}
 
 {% if return is defined %}
+<h3>Return:</h3>
 {{return}}
 {% endif %}
 
 {% if example is defined %}
+<h3>Request example:</h3>
+<pre>
+    <code>
 {{example}}
+    </code>
+</pre>
 {% endif %}
 
 {% if result_example is defined %}
+<h3>Response example:</h3>
+<pre>
+    <code>
 {{result_example}}
+    </code>
+</pre>
 {% endif %}
 
 {% endblock %}
