@@ -15,7 +15,7 @@ setup(
     test_suite="tests",
     long_description=open("README.rst").read(),
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
