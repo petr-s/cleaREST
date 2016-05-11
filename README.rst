@@ -131,6 +131,7 @@ HTML Documentation
 ==================
 
 when is url opened by web-browser html documentation is shown instead of actual function call.
+
 * "application/xhtml+xml" in accept http header
 * similar tags to sphinx/docutils
 * extra example tags: ":example:" and for response ":rexample":
