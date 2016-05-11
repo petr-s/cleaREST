@@ -1,6 +1,11 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import clearest
+
+
+def parse_requirements():
+    with open("requirements.txt") as f:
+        return [line for line in f if not line.startswith("#")]
 
 setup(
     name="cleaREST",
@@ -11,7 +16,8 @@ setup(
     license="MIT",
     keywords="rest api framework json xml",
     url=clearest.__homepage__,
-    packages=["clearest", "tests", "sample"],
+    packages=find_packages(),
+    install_requires=parse_requirements(),
     test_suite="tests",
     long_description=open("README.rst").read(),
     classifiers=[
@@ -21,10 +27,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.0",
-        "Programming Language :: Python :: 3.1",
-        "Programming Language :: Python :: 3.2",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
