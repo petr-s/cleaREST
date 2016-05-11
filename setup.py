@@ -17,6 +17,7 @@ setup(
     keywords="rest api framework json xml",
     url=clearest.__homepage__,
     packages=find_packages(),
+    include_package_data=True,
     install_requires=parse_requirements(),
     test_suite="tests",
     long_description=open("README.rst").read(),
