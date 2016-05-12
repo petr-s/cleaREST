@@ -71,18 +71,17 @@ def parse(doc_string):  # TODO: rewrite (really ugly)
 
 
 def generate_single(doc_string):
-    to_render = {
-        "clearest_version": clearest.__version__,
-        "clearest_home": clearest.__homepage__,
-    }
-    to_render.update(parse(doc_string))
     env = Environment(loader=_loader)
     template = env.get_template("single.html")
-    return template.render(to_render)
+    return template.render(parse(doc_string))
 
 
 def generate_index(all_):
-    urls = [(desc, method, path, generate_single(doc_string)) for desc, method, path, doc_string in all_]
+    to_render = {
+        "clearest_version": clearest.__version__,
+        "clearest_home": clearest.__homepage__,
+        "urls": [(desc, method, path, generate_single(doc_string)) for desc, method, path, doc_string in all_]
+    }
     env = Environment(loader=_loader)
     template = env.get_template("index.html")
-    return template.render({"urls": urls})
+    return template.render(to_render)

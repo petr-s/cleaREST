@@ -1,5 +1,6 @@
 from mock import patch
 
+import clearest
 from clearest import *
 from clearest.docs import set_templates_path
 from tests.wsgi import WSGITestCase
@@ -10,6 +11,8 @@ def strip_ws(source):
 
 
 BROWSER_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+VERSION = clearest.__version__
+HOME_PAGE = clearest.__homepage__
 
 
 class Test(WSGITestCase):
@@ -28,6 +31,8 @@ class Test(WSGITestCase):
         self.assertIsNotNone(result)
         self.assertTrue("GET" in result)
         self.assertTrue("/asd" in result)
+        self.assertTrue(VERSION in result)
+        self.assertTrue(HOME_PAGE in result)
 
     def test_docs_empty(self):
         @GET("/asd")
@@ -42,6 +47,8 @@ class Test(WSGITestCase):
         self.assertIsNotNone(result)
         self.assertTrue("GET" in result)
         self.assertTrue("/asd" in result)
+        self.assertTrue(VERSION in result)
+        self.assertTrue(HOME_PAGE in result)
 
     def test_docs_simple(self):
         @GET("/asd")
@@ -59,6 +66,8 @@ class Test(WSGITestCase):
         self.assertTrue("GET" in result)
         self.assertTrue("/asd" in result)
         self.assertTrue("asd function" in result)
+        self.assertTrue(VERSION in result)
+        self.assertTrue(HOME_PAGE in result)
 
     def test_docs_multiple(self):
         @GET("/asd")
@@ -85,6 +94,8 @@ class Test(WSGITestCase):
         self.assertTrue("asd function" in result)
         self.assertTrue("/asd2" in result)
         self.assertTrue("asd2 function" in result)
+        self.assertTrue(VERSION in result)
+        self.assertTrue(HOME_PAGE in result)
 
     def test_docs_description(self):
         @GET("/asd", description="description")
@@ -103,6 +114,8 @@ class Test(WSGITestCase):
         self.assertTrue("/asd" in result)
         self.assertTrue("asd function" in result)
         self.assertTrue("description" in result)
+        self.assertTrue(VERSION in result)
+        self.assertTrue(HOME_PAGE in result)
 
     def test_docs_complex(self):
         @GET("/asd")
@@ -142,6 +155,8 @@ class Test(WSGITestCase):
         self.assertTrue("json copy of arguments" in result)
         self.assertTrue("GET /asd?first=hi&second=42" in result)
         self.assertTrue(strip_ws("""{"first": "first", "second": 42}""") in strip_ws(result))
+        self.assertTrue(VERSION in result)
+        self.assertTrue(HOME_PAGE in result)
 
     @patch("jinja2.FileSystemLoader.get_source")
     def test_docs_custom_template(self, mock_get_source):
