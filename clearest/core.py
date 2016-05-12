@@ -10,7 +10,7 @@ from copy import deepcopy
 from xml.dom.minidom import Document
 from xml.etree.ElementTree import tostring, Element
 
-from clearest.docs import generate_single
+from clearest.docs import generate_index
 
 try:  # pragma: no cover
     from urllib.parse import parse_qs  # pragma: no cover
@@ -229,14 +229,13 @@ def application(environ, start_response):
         elif environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
-            if environ[REQUEST_METHOD] == HTTP_GET and MIME_XHTML_XML in parse_accept():
+            if environ[REQUEST_METHOD] == HTTP_GET and MIME_XHTML_XML in parse_accept() and path == ("",):
                 start_response(STATUS_FMT.format(*HTTP_OK), [(CONTENT_TYPE, MIME_TEXT_HTML)])
                 for method in six.iterkeys(BaseDecorator.registered):
-                    for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[method]):
-                        if is_matching(signature, args, path, query):
-                            return [generate_single(method=method,
-                                                    path=signature_to_path(signature),
-                                                    doc_string=fn.__doc__).encode("utf-8")]
+                    all_ = [(desc, method, signature_to_path(signature), fn.__doc__)
+                            for signature, (fn, args, status, desc) in
+                            six.iteritems(BaseDecorator.registered[method])]
+                    return [generate_index(all_).encode("utf-8")]
             elif WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
                 content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:
@@ -244,7 +243,7 @@ def application(environ, start_response):
                 query.update(content_types[content_type](environ[WSGI_INPUT],
                                                          int(environ[WSGI_CONTENT_LENGTH]),
                                                          extras_))
-            for signature, (fn, args, status) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
+            for signature, (fn, args, status, desc) in six.iteritems(BaseDecorator.registered[environ[REQUEST_METHOD]]):
                 if is_matching(signature, args, path, query):
                     try:
                         updated_query = query.copy()
@@ -276,9 +275,10 @@ def application(environ, start_response):
 class BaseDecorator(object):
     registered = defaultdict(lambda: dict())
 
-    def __init__(self, path, status=HTTP_OK):
+    def __init__(self, path, status=HTTP_OK, description=None):
         self.path = parse_path(path)
         self.status = status
+        self.description = description
 
     def __call__(self, fn):
         @functools.wraps(fn)
@@ -296,7 +296,7 @@ class BaseDecorator(object):
             raise AlreadyRegisteredError(path, old)
         fn_args = get_function_args(fn)
         check_function(self.path, fn.__name__, fn_args)
-        registered[self.path] = wrapped, fn_args, self.status
+        registered[self.path] = wrapped, fn_args, self.status, self.description
         return wrapped
 
     @abstractmethod

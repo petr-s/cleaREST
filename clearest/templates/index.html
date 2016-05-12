@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}API documentation{% endblock %}
+{% block head %}
+{{ super() }}
+<style>
+.parameters {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.parameters th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+}
+
+.parameters th {
+    background-color: #e6f2ff;
+}
+
+
+
+</style>
+{% endblock %}
+{% block header %}<h1>API documentation</h1>{% endblock %}
+{% block content %}
+<script>
+$(document).ready(function () {
+    $(function() {
+        $( "#accordion" ).accordion({
+            collapsible: true,
+            heightStyle: "content"
+        });
+    });
+});
+
+</script>
+<div id="accordion">
+    {% for url in urls %}
+    {% if url.0 is not none %}
+    <h3>{{url.0}} ({{url.1}} {{url.2}})</h3>
+    {% else %}
+    <h3>{{url.1}} {{url.2}}</h3>
+    {% endif %}
+    <div>
+        {{url.3}}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

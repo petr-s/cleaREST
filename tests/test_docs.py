@@ -21,7 +21,7 @@ class Test(WSGITestCase):
         def asd():
             return {}
 
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
@@ -35,7 +35,7 @@ class Test(WSGITestCase):
             """"""
             return {}
 
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
@@ -51,7 +51,7 @@ class Test(WSGITestCase):
             """
             return {}
 
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
@@ -59,6 +59,50 @@ class Test(WSGITestCase):
         self.assertTrue("GET" in result)
         self.assertTrue("/asd" in result)
         self.assertTrue("asd function" in result)
+
+    def test_docs_multiple(self):
+        @GET("/asd")
+        def asd():
+            """
+            asd function
+            """
+            return {}
+
+        @GET("/asd2")
+        def asd():
+            """
+            asd2 function
+            """
+            return {}
+
+        result = self.get("/", accept=BROWSER_ACCEPT)
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
+        self.assertIsNotNone(result)
+        self.assertTrue("GET" in result)
+        self.assertTrue("/asd" in result)
+        self.assertTrue("asd function" in result)
+        self.assertTrue("/asd2" in result)
+        self.assertTrue("asd2 function" in result)
+
+    def test_docs_description(self):
+        @GET("/asd", description="description")
+        def asd():
+            """
+            asd function
+            """
+            return {}
+
+        result = self.get("/", accept=BROWSER_ACCEPT)
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertTrue(CONTENT_TYPE in self.headers)
+        self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
+        self.assertIsNotNone(result)
+        self.assertTrue("GET" in result)
+        self.assertTrue("/asd" in result)
+        self.assertTrue("asd function" in result)
+        self.assertTrue("description" in result)
 
     def test_docs_complex(self):
         @GET("/asd")
@@ -83,7 +127,7 @@ class Test(WSGITestCase):
             """
             return {"first": first, "second": second}
 
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
@@ -109,7 +153,7 @@ class Test(WSGITestCase):
         custom_template = "I'm a custom template"
         mock_get_source.return_value = custom_template, "single.html", True
         set_templates_path("/my/template/dir")
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
@@ -127,7 +171,7 @@ class Test(WSGITestCase):
         custom_template = "custom template"
         mock_get_source.return_value = custom_template, "single.html", True
         set_templates_path("/my/template/dir")
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])
@@ -138,7 +182,7 @@ class Test(WSGITestCase):
         custom_template = "second custom template"
         mock_get_source.return_value = custom_template, "single.html", True
         set_templates_path("/my/template/dir")
-        result = self.get("/asd", accept=BROWSER_ACCEPT)
+        result = self.get("/", accept=BROWSER_ACCEPT)
         self.assertEqual(HTTP_OK, self.status)
         self.assertTrue(CONTENT_TYPE in self.headers)
         self.assertEqual(MIME_TEXT_HTML, self.headers[CONTENT_TYPE])

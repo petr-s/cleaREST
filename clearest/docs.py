@@ -70,15 +70,19 @@ def parse(doc_string):  # TODO: rewrite (really ugly)
     return result
 
 
-def generate_single(method, path, doc_string, **kwargs):
-    to_render = kwargs.copy()
-    to_render.update({
+def generate_single(doc_string):
+    to_render = {
         "clearest_version": clearest.__version__,
         "clearest_home": clearest.__homepage__,
-        "method": method,
-        "path": path
-    })
+    }
     to_render.update(parse(doc_string))
     env = Environment(loader=_loader)
     template = env.get_template("single.html")
     return template.render(to_render)
+
+
+def generate_index(all_):
+    urls = [(desc, method, path, generate_single(doc_string)) for desc, method, path, doc_string in all_]
+    env = Environment(loader=_loader)
+    template = env.get_template("index.html")
+    return template.render({"urls": urls})
