@@ -53,3 +53,14 @@ class Test(WSGITestCase):
 
         self.get("/asd")
         self.assertEqual(HTTP_UNSUPPORTED_MEDIA_TYPE, self.status)
+
+    def test_parse_fn_raise_http(self):
+        def test(a):
+            raise HttpForbidden()
+
+        @GET("/asd")
+        def asd(a=test):
+            return {}
+
+        self.get("/asd?a=1")
+        self.assertEqual(HTTP_FORBIDDEN, self.status)

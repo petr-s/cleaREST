@@ -251,6 +251,8 @@ def application(environ, start_response):
                                               for key, value in zip(signature, path)
                                               if isinstance(key, Key)})
                         parsed_args = parse_args(args, path, updated_query, specials)
+                    except HttpError:
+                        raise
                     except Exception as e:
                         logging.exception(e)
                         raise HttpBadRequest()
