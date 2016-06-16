@@ -229,14 +229,22 @@ def application(environ, start_response):
         elif environ[REQUEST_METHOD] in all_registered():
             path = tuple(environ[PATH_INFO][1:].split("/"))
             query = parse_qs(environ[QUERY_STRING]) if QUERY_STRING in environ else {}
-            if environ[REQUEST_METHOD] == HTTP_GET and MIME_XHTML_XML in parse_accept() and path == ("",):
+            if (
+                                environ[REQUEST_METHOD] == HTTP_GET and
+                                MIME_XHTML_XML in parse_accept() and
+                            path == ("",)
+            ):
                 start_response(STATUS_FMT.format(*HTTP_OK), [(CONTENT_TYPE, MIME_TEXT_HTML)])
                 for method in six.iterkeys(BaseDecorator.registered):
                     all_ = [(desc, method, signature_to_path(signature), fn.__doc__)
                             for signature, (fn, args, status, desc) in
                             six.iteritems(BaseDecorator.registered[method])]
                     return [generate_index(all_).encode("utf-8")]
-            elif WSGI_CONTENT_TYPE in environ and environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN:
+            elif (
+                                WSGI_CONTENT_TYPE in environ and
+                            environ[WSGI_CONTENT_TYPE] and
+                            environ[WSGI_CONTENT_TYPE] != MIME_TEXT_PLAIN
+            ):
                 content_type, extras_ = parse_content_type(environ[WSGI_CONTENT_TYPE])
                 if content_type not in content_types:
                     raise HttpUnsupportedMediaType()

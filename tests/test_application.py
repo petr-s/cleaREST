@@ -296,6 +296,16 @@ asd
         self.assertEqual(HTTP_OK, self.status)
         self.assertCalledWith(asd, "hello")
 
+    def test_application_simple_empty_content_type(self):
+        @POST("/asd")
+        @called_with
+        def asd():
+            return {}
+
+        self.post("/asd", content_type="")
+        self.assertEqual(HTTP_OK, self.status)
+        self.assertCalledWith(asd)
+
     def test_application_simple_post_json_multi(self):
         @POST("/asd")
         @called_with
